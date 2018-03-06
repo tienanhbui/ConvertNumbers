@@ -9,7 +9,7 @@ public class InitData {
 	public void insertData() {
 		StringBuilder data = new StringBuilder();
 		Random rd = new Random();
-		for (int i = 0; i < 9999999; i++) {
+		for (int i = 0; i < 999999; i++) {
 			data.append(rd.nextInt(100000000) + " ");
 		}
 		ReadWriteFile.Write(FILE_NAME, data);

@@ -10,6 +10,8 @@ import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 import javax.swing.Timer;
 import javax.swing.plaf.basic.BasicProgressBarUI;
@@ -21,13 +23,13 @@ import javax.swing.table.DefaultTableModel;
  */
 public class MainScreen extends javax.swing.JFrame {
     String pathFile = null;
-    int i = 2;
     String folder = "\\";
-    /**
-     * Creates new form NewApplication
-     */
+    DefaultTableModel model;
+  
     public MainScreen() {
         initComponents();
+        
+        model = (DefaultTableModel) jTableResult.getModel();
         if(System.getProperty("os.name").equals("Linux")){
             folder = "/";
         }
@@ -35,15 +37,12 @@ public class MainScreen extends javax.swing.JFrame {
         jProgressBar1.setValue(0);
         jProgressBar1.setUI(new BasicProgressBarUI());
         
-        
-        
         jProgressBar1.setForeground(makeColor("#333333"));
         jProgressBar1.setBackground(makeColor("#cccccc"));
         jProgressBar1.setBorderPainted(true);
 
 //        jProgressBar1.setIndeterminate(true);
         jProgressBar1.setStringPainted(true);
-//        this.add(jProgressBar1);
 
     }
     
@@ -66,15 +65,15 @@ public class MainScreen extends javax.swing.JFrame {
         jTabbedPane3 = new javax.swing.JTabbedPane();
         jPanel2 = new javax.swing.JPanel();
         jLabelInputSource = new javax.swing.JLabel();
-        jButton1 = new javax.swing.JButton();
+        jButtonFileChooser = new javax.swing.JButton();
         jLabelFileLocation = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
         jTextArea1 = new javax.swing.JTextArea();
         jScrollPane2 = new javax.swing.JScrollPane();
-        jTable1 = new javax.swing.JTable();
+        jTableResult = new javax.swing.JTable();
         jLabelInputSource1 = new javax.swing.JLabel();
         jTextField1 = new javax.swing.JTextField();
-        jButton2 = new javax.swing.JButton();
+        jButtonStart = new javax.swing.JButton();
         jLabelInputSource2 = new javax.swing.JLabel();
         jComboBox1 = new javax.swing.JComboBox<>();
         jProgressBar1 = new javax.swing.JProgressBar();
@@ -93,10 +92,10 @@ public class MainScreen extends javax.swing.JFrame {
         jLabelInputSource.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
         jLabelInputSource.setText("Nhập dữ liệu : ");
 
-        jButton1.setText("Chọn tệp tin");
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
+        jButtonFileChooser.setText("Chọn tệp tin");
+        jButtonFileChooser.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton1ActionPerformed(evt);
+                jButtonFileChooserActionPerformed(evt);
             }
         });
 
@@ -107,7 +106,7 @@ public class MainScreen extends javax.swing.JFrame {
         jTextArea1.setRows(5);
         jScrollPane1.setViewportView(jTextArea1);
 
-        jTable1.setModel(new javax.swing.table.DefaultTableModel(
+        jTableResult.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
 
             },
@@ -123,9 +122,9 @@ public class MainScreen extends javax.swing.JFrame {
                 return canEdit [columnIndex];
             }
         });
-        jScrollPane2.setViewportView(jTable1);
-        if (jTable1.getColumnModel().getColumnCount() > 0) {
-            jTable1.getColumnModel().getColumn(3).setResizable(false);
+        jScrollPane2.setViewportView(jTableResult);
+        if (jTableResult.getColumnModel().getColumnCount() > 0) {
+            jTableResult.getColumnModel().getColumn(3).setResizable(false);
         }
 
         jLabelInputSource1.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
@@ -134,10 +133,10 @@ public class MainScreen extends javax.swing.JFrame {
         jTextField1.setText(",");
         jTextField1.setAlignmentY(5.0F);
 
-        jButton2.setText("Chuyển đổi");
-        jButton2.addActionListener(new java.awt.event.ActionListener() {
+        jButtonStart.setText("Chuyển đổi");
+        jButtonStart.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton2ActionPerformed(evt);
+                jButtonStartActionPerformed(evt);
             }
         });
 
@@ -160,19 +159,20 @@ public class MainScreen extends javax.swing.JFrame {
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addComponent(jLabelInputSource)
                     .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addComponent(jLabelInputSource1)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 29, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addComponent(jButton1)
+                        .addComponent(jButtonFileChooser)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jLabelFileLocation, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 95, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addComponent(jLabelInputSource2)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 400, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 400, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                        .addComponent(jButtonStart, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel2Layout.createSequentialGroup()
+                            .addComponent(jLabelInputSource1)
+                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                            .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 29, javax.swing.GroupLayout.PREFERRED_SIZE))))
                 .addGap(18, 18, 18)
                 .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 372, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
@@ -187,7 +187,7 @@ public class MainScreen extends javax.swing.JFrame {
                         .addComponent(jLabelInputSource)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jButton1)
+                            .addComponent(jButtonFileChooser)
                             .addComponent(jLabelFileLocation))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jScrollPane1)
@@ -202,7 +202,7 @@ public class MainScreen extends javax.swing.JFrame {
                                 .addComponent(jLabelInputSource2, javax.swing.GroupLayout.PREFERRED_SIZE, 13, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addGap(3, 3, 3)))
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 44, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jButtonStart, javax.swing.GroupLayout.PREFERRED_SIZE, 44, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(16, 16, 16))
                     .addGroup(jPanel2Layout.createSequentialGroup()
                         .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -278,7 +278,7 @@ public class MainScreen extends javax.swing.JFrame {
         System.exit(0);
     }//GEN-LAST:event_exitMenuItemActionPerformed
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+    private void jButtonFileChooserActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonFileChooserActionPerformed
         JFileChooser c = new JFileChooser();
         if(pathFile == null)
         c.setCurrentDirectory(new File
@@ -289,35 +289,39 @@ public class MainScreen extends javax.swing.JFrame {
         // Demonstrate "Open" dialog:
         int rVal = c.showOpenDialog(MainScreen.this);
         if (rVal == JFileChooser.APPROVE_OPTION) {
-            pathFile = c.getCurrentDirectory().toString();
-            jLabelFileLocation.setText(pathFile + folder +c.getSelectedFile().getName());
-            DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
-            
-            ThreadConvert convertBackground = new ThreadConvert(model, pathFile + folder +c.getSelectedFile().getName());
-            convertBackground.start();
-            final Timer t = new Timer(50, new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                jProgressBar1.setValue((int) convertBackground.getProcessStatus());
-                if (jProgressBar1.getValue() == 100) {
-                  ((Timer) e.getSource()).stop();
-                  jTextArea1.setText(convertBackground.getRuntime()+" ms");
-                }
-            }
-        });
-        t.start();
-            
+            pathFile = c.getCurrentDirectory().toString()+ folder +c.getSelectedFile().getName();
+            jLabelFileLocation.setText(pathFile);
         }
         if (rVal == JFileChooser.CANCEL_OPTION) {
             //          filename.setText("You pressed cancel");
             //          dir.setText("");
         }
 
-    }//GEN-LAST:event_jButton1ActionPerformed
+    }//GEN-LAST:event_jButtonFileChooserActionPerformed
 
-    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-        // TODO add your handling code here:
-       
-    }//GEN-LAST:event_jButton2ActionPerformed
+    private void jButtonStartActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonStartActionPerformed
+        ThreadConvert convertBackground = new ThreadConvert(model, pathFile);
+        convertBackground.start();
+        jButtonStart.setText("Đang chạy . . .");
+        jButtonStart.setEnabled(false);
+        final Timer t = new Timer(50, new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                jProgressBar1.setValue((int) convertBackground.getProcessStatus());
+                if (jProgressBar1.getValue() == 100) {
+                    ((Timer) e.getSource()).stop();
+                    jTextArea1.setText(convertBackground.getRuntime()+" ms");
+                    jButtonStart.setText("Chuyển đổi");
+                    jButtonStart.setEnabled(true);
+                    try {
+                        convertBackground.join();
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(MainScreen.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            }
+        });
+        t.start();
+    }//GEN-LAST:event_jButtonStartActionPerformed
 
     private void jComboBox1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBox1ActionPerformed
         // TODO add your handling code here:
@@ -366,8 +370,8 @@ public class MainScreen extends javax.swing.JFrame {
     private javax.swing.JMenuItem exitMenuItem;
     private javax.swing.JMenu fileMenu;
     private javax.swing.JMenu helpMenu;
-    private javax.swing.JButton jButton1;
-    private javax.swing.JButton jButton2;
+    private javax.swing.JButton jButtonFileChooser;
+    private javax.swing.JButton jButtonStart;
     private javax.swing.JComboBox<String> jComboBox1;
     private javax.swing.JLabel jLabelFileLocation;
     private javax.swing.JLabel jLabelInputSource;
@@ -379,7 +383,7 @@ public class MainScreen extends javax.swing.JFrame {
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JTabbedPane jTabbedPane3;
-    private javax.swing.JTable jTable1;
+    private javax.swing.JTable jTableResult;
     private javax.swing.JTextArea jTextArea1;
     private javax.swing.JTextField jTextField1;
     private javax.swing.JMenuBar menuBar;

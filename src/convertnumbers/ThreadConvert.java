@@ -29,7 +29,7 @@ public class ThreadConvert extends Thread {
             this.length = this.s.length;
             _persent = this.length / 100;
             if(this.length > 1000)
-                sb = new StringBuilder[(int) Math.ceil(this.length/1000) + 1000];
+                sb = new StringBuilder[(int) Math.ceil(this.length/1000) + 1];
             else sb = new StringBuilder[1];
             
             for (int i = 0; i < sb.length; i++) {
@@ -51,7 +51,7 @@ public class ThreadConvert extends Thread {
             for (int i = 0; i < this.length; i++) {
                //model.addRow(new Object[]{ExchangeNumberType.convertNumber(s[i], 10, 2).toString(), s[i].toString()});
                
-               sb[jumper-1].append(ExchangeNumberType.convertNumber(s[i], 10, 2));
+               sb[jumper-1].append(ExchangeNumberType.convertNumber(s[i], 10, 2)).append(" ");
                runner = i;
                
                if(i / jumper == 1000){
