@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Repost</title>
+    <script src="http://www.chartjs.org/dist/2.7.2/Chart.bundle.js"></script>
+</head>
+<body>
+    <canvas id="myChart" width="400" height="400"></canvas>
+
+    
+    
+    <br>
+    <input type='file' accept='text/plain' onchange='openFile(event)'>
+    
+    <script>
+
+
+    //file:///home/tienanhbui/NetBeansProjects/ConvertNumbers/ReportStack.txt
+    data = [];
+
+   
+    function openFile(event, type) {
+        var input = event.target;
+
+        var reader = new FileReader();
+        reader.onload = function(){
+          var text = reader.result;
+
+         
+          show(text);
+         
+        };
+        reader.readAsText(input.files[0]);
+    };    
+
+    function show(data){
+
+        console.log(data)
+        
+        let datasets = data.split("/");
+        data2 = datasets[0].split(" ");
+        data = datasets[1].split(" ");
+
+        var canvas = document.getElementById('myChart');
+
+        var labels = [];
+        for (var i = 1; i <= data.length; i++) {
+            labels.push(i);
+        }
+
+        var data = {
+            labels: labels,
+            datasets: [
+                {
+                    fill: 'origin',
+                    label: "Stack",
+                    backgroundColor: "rgba(255,99,132,0.2)",
+                    borderColor: "rgba(255,99,132,1)",
+                    borderWidth: 2,
+                    hoverBackgroundColor: "rgba(255,99,132,0.4)",
+                    hoverBorderColor: "rgba(255,99,132,1)",
+                    data: data
+                },
+                {
+                    fill: 'origin',
+                    label: "Linked List",
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 2,
+                    hoverBackgroundColor: "rgba(54, 162, 235,0.4)",
+                    hoverBorderColor: 'rgba(54, 162, 235, 1)',
+                    data: data2
+                }
+            ]
+        };
+        var option = {
+            responsive: true,
+            maintainAspectRatio: false,
+            elements: {
+                line: {
+                    tension: 0.000001
+                }
+            },
+            scales: {
+                yAxes: [{
+                    ticks: {
+                        beginAtZero:true
+                    }
+                }]
+            }
+        };
+
+        var myBarChart = Chart.Line(canvas,{
+            data:data,
+          options:option
+        });
+
+    }
+
+    </script>
+
+</body>
+</html>

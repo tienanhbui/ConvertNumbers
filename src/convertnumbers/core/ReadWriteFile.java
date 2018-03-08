@@ -8,6 +8,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import javax.swing.JOptionPane;
 
 public class ReadWriteFile {
 	public static void Write(String fileName, StringBuilder string) {
@@ -35,13 +36,14 @@ public class ReadWriteFile {
 			Object obj = objectInputStream.readObject();
 			str = (StringBuilder) obj;
 
-		} catch (IOException | ClassNotFoundException ex) {
-			// System.out.print("Lỗi : "+ex);
+		} catch (Exception ex) {
+                    System.out.print("Lỗi : "+ex);
 		} finally {
 			try {
 				objectInputStream.close();
-			} catch (IOException ex) {
-				// System.out.print("Lỗi : "+ex);
+			} catch (Exception ex) {
+				 JOptionPane.showMessageDialog(null, "File không hợp lệ!", "Error",
+                                    JOptionPane.ERROR_MESSAGE);
 			}
 		}
 		return str.toString();

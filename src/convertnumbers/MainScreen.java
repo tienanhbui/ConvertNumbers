@@ -10,9 +10,15 @@ import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.DecimalFormat;
+import java.util.Date;
+import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
 import javax.swing.Timer;
 import javax.swing.plaf.basic.BasicProgressBarUI;
 import javax.swing.table.DefaultTableModel;
@@ -22,14 +28,18 @@ import javax.swing.table.DefaultTableModel;
  * @author tienanhbui
  */
 public class MainScreen extends javax.swing.JFrame {
-    String pathFile = null;
-    String folder = "\\";
-    DefaultTableModel model;
+    String pathFile = null, folder = "\\", splitChar;
+    DefaultTableModel model, modelTest;
+    StringBuilder[] rawResultBin, rawResultHex, rawResultOct, rawResultDec;
+    String[] sourceData;
+    int numOfPages = 1, currenPage = 1, numberType, numTab = 1;
+    long[] reportStack, reportLinkedList;
   
     public MainScreen() {
         initComponents();
         
         model = (DefaultTableModel) jTableResult.getModel();
+        modelTest = (DefaultTableModel) jTableResultTest.getModel();
         if(System.getProperty("os.name").equals("Linux")){
             folder = "/";
         }
@@ -40,6 +50,9 @@ public class MainScreen extends javax.swing.JFrame {
         jProgressBar1.setForeground(makeColor("#333333"));
         jProgressBar1.setBackground(makeColor("#cccccc"));
         jProgressBar1.setBorderPainted(true);
+        
+        jProgressBarTest.setStringPainted(true);
+        jProgressBarTest.setVisible(false);
 
 //        jProgressBar1.setIndeterminate(true);
         jProgressBar1.setStringPainted(true);
@@ -51,6 +64,66 @@ public class MainScreen extends javax.swing.JFrame {
             Integer.valueOf( colorStr.substring( 1, 3 ), 16 ),
             Integer.valueOf( colorStr.substring( 3, 5 ), 16 ),
             Integer.valueOf( colorStr.substring( 5, 7 ), 16 ) );
+    }
+    
+    private void _renderResult(){
+        model.setRowCount(0);
+        
+        String[] tableBin = null, tableHex  = null, tableOct  = null, tableDec  = null;
+        
+        switch(numberType){
+            case 2 : tableBin = sourceData;  break;
+            case 8 : tableOct = sourceData;  break;
+            case 16 : tableHex = sourceData; break;
+            default: tableDec = sourceData;
+        }
+        
+        if(tableBin == null)
+        tableBin = rawResultBin[currenPage - 1].toString().split(" ");
+        
+        if(tableHex == null)
+        tableHex = rawResultHex[currenPage - 1].toString().split(" ");
+        
+        if(tableOct == null)
+        tableOct = rawResultOct[currenPage - 1].toString().split(" ");
+        
+        if(tableDec == null)
+        tableDec = rawResultDec[currenPage - 1].toString().split(" ");
+        
+        
+        
+        jLabelTotal.setText(sourceData.length+"");
+        
+        int sourcePage = ((currenPage - 1) * tableBin.length);
+        for (int i = 0; i < tableBin.length; i++) {
+            if(tableBin[i] != null && !tableBin[i].equals("")){
+                model.addRow(new Object[]{tableBin[i], tableDec[i], tableHex[i] , tableOct[i]});
+                sourcePage ++;
+            }
+        }
+        jLabelcurrenDisplay.setText(((currenPage - 1) * tableBin.length) + " - " + (((currenPage - 1) * tableBin.length) + tableBin.length));
+        if(currenPage == 1) jButtonPre.setEnabled(false); else jButtonPre.setEnabled(true);
+        if(currenPage == numOfPages) jButtonNext.setEnabled(false); else jButtonNext.setEnabled(true);
+        jTextFieldCountPages.setText(currenPage+"");
+    }
+    
+    
+    public static String readableFileSize(long size) {
+        if(size <= 0) return "0";
+        final String[] units = new String[] { "B", "kB", "MB", "GB", "TB" };
+        int digitGroups = (int) (Math.log10(size)/Math.log10(1024));
+        return new DecimalFormat("#,##0.#").format(size/Math.pow(1024, digitGroups)) + " " + units[digitGroups];
+    }
+    
+    private void reset(){
+        if(model != null) model.setRowCount(0);
+        numOfPages = 1; currenPage = 1;
+        rawResultBin = null;
+        rawResultDec = null;
+        rawResultHex = null;
+        rawResultOct = null;
+        sourceData = null;
+        jLabelNumOfPages.setText("/ ???");
     }
 
     /**
@@ -65,19 +138,44 @@ public class MainScreen extends javax.swing.JFrame {
         jTabbedPane3 = new javax.swing.JTabbedPane();
         jPanel2 = new javax.swing.JPanel();
         jLabelInputSource = new javax.swing.JLabel();
-        jButtonFileChooser = new javax.swing.JButton();
-        jLabelFileLocation = new javax.swing.JLabel();
-        jScrollPane1 = new javax.swing.JScrollPane();
-        jTextArea1 = new javax.swing.JTextArea();
         jScrollPane2 = new javax.swing.JScrollPane();
         jTableResult = new javax.swing.JTable();
         jLabelInputSource1 = new javax.swing.JLabel();
-        jTextField1 = new javax.swing.JTextField();
+        jTextFieldSplitChar = new javax.swing.JTextField();
         jButtonStart = new javax.swing.JButton();
         jLabelInputSource2 = new javax.swing.JLabel();
-        jComboBox1 = new javax.swing.JComboBox<>();
+        jComboBoxNumType = new javax.swing.JComboBox<>();
         jProgressBar1 = new javax.swing.JProgressBar();
+        jLabel1 = new javax.swing.JLabel();
+        jLabelcurrenDisplay = new javax.swing.JLabel();
+        jLabel3 = new javax.swing.JLabel();
+        jLabelTotal = new javax.swing.JLabel();
+        jButtonPre = new javax.swing.JButton();
+        jButtonNext = new javax.swing.JButton();
+        jTextFieldCountPages = new javax.swing.JTextField();
+        jLabelNumOfPages = new javax.swing.JLabel();
+        jLabelCountTime = new javax.swing.JLabel();
+        jTabbedPaneSource = new javax.swing.JTabbedPane();
+        jPanel3 = new javax.swing.JPanel();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        jTextAreaSource = new javax.swing.JTextArea();
+        jPanel4 = new javax.swing.JPanel();
+        jButtonFileChooser = new javax.swing.JButton();
+        jLabelFileLocation = new javax.swing.JLabel();
+        jLabelInfoFile = new javax.swing.JLabel();
         jPanel1 = new javax.swing.JPanel();
+        jPanel5 = new javax.swing.JPanel();
+        jLabel2 = new javax.swing.JLabel();
+        jTextFieldLengthTest = new javax.swing.JTextField();
+        jLabel4 = new javax.swing.JLabel();
+        jTextFieldLoopPerRow = new javax.swing.JTextField();
+        jLabel5 = new javax.swing.JLabel();
+        jTextFieldLoopTest = new javax.swing.JTextField();
+        jScrollPane4 = new javax.swing.JScrollPane();
+        jTableResultTest = new javax.swing.JTable();
+        jProgressBarTest = new javax.swing.JProgressBar();
+        jButtonReport = new javax.swing.JButton();
+        jButtonStartTesting = new javax.swing.JButton();
         menuBar = new javax.swing.JMenuBar();
         fileMenu = new javax.swing.JMenu();
         openMenuItem = new javax.swing.JMenuItem();
@@ -92,20 +190,6 @@ public class MainScreen extends javax.swing.JFrame {
         jLabelInputSource.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
         jLabelInputSource.setText("Nhập dữ liệu : ");
 
-        jButtonFileChooser.setText("Chọn tệp tin");
-        jButtonFileChooser.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButtonFileChooserActionPerformed(evt);
-            }
-        });
-
-        jLabelFileLocation.setText("file");
-
-        jTextArea1.setColumns(20);
-        jTextArea1.setLineWrap(true);
-        jTextArea1.setRows(5);
-        jScrollPane1.setViewportView(jTextArea1);
-
         jTableResult.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
 
@@ -114,9 +198,16 @@ public class MainScreen extends javax.swing.JFrame {
                 "Bin", "Dec", "Hex", "Octal"
             }
         ) {
+            Class[] types = new Class [] {
+                java.lang.String.class, java.lang.String.class, java.lang.String.class, java.lang.String.class
+            };
             boolean[] canEdit = new boolean [] {
                 false, false, false, false
             };
+
+            public Class getColumnClass(int columnIndex) {
+                return types [columnIndex];
+            }
 
             public boolean isCellEditable(int rowIndex, int columnIndex) {
                 return canEdit [columnIndex];
@@ -124,14 +215,16 @@ public class MainScreen extends javax.swing.JFrame {
         });
         jScrollPane2.setViewportView(jTableResult);
         if (jTableResult.getColumnModel().getColumnCount() > 0) {
-            jTableResult.getColumnModel().getColumn(3).setResizable(false);
+            jTableResult.getColumnModel().getColumn(0).setMaxWidth(400);
+            jTableResult.getColumnModel().getColumn(1).setMaxWidth(200);
+            jTableResult.getColumnModel().getColumn(2).setMaxWidth(200);
+            jTableResult.getColumnModel().getColumn(3).setMaxWidth(200);
         }
 
         jLabelInputSource1.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
         jLabelInputSource1.setText("Ký tự phân biệt : ");
 
-        jTextField1.setText(",");
-        jTextField1.setAlignmentY(5.0F);
+        jTextFieldSplitChar.setAlignmentY(5.0F);
 
         jButtonStart.setText("Chuyển đổi");
         jButtonStart.addActionListener(new java.awt.event.ActionListener() {
@@ -143,12 +236,121 @@ public class MainScreen extends javax.swing.JFrame {
         jLabelInputSource2.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
         jLabelInputSource2.setText("Hệ số :");
 
-        jComboBox1.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "2", "8", "10", "16" }));
-        jComboBox1.addActionListener(new java.awt.event.ActionListener() {
+        jComboBoxNumType.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "2", "8", "10", "16" }));
+        jComboBoxNumType.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jComboBox1ActionPerformed(evt);
+                jComboBoxNumTypeActionPerformed(evt);
             }
         });
+
+        jLabel1.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        jLabel1.setText("Hiển thị : ");
+
+        jLabelcurrenDisplay.setText("number");
+
+        jLabel3.setText("/");
+
+        jLabelTotal.setText("total");
+
+        jButtonPre.setText("Trước");
+        jButtonPre.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonPreActionPerformed(evt);
+            }
+        });
+
+        jButtonNext.setText("Sau");
+        jButtonNext.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonNextActionPerformed(evt);
+            }
+        });
+
+        jTextFieldCountPages.setText("1");
+        jTextFieldCountPages.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyReleased(java.awt.event.KeyEvent evt) {
+                jTextFieldCountPagesKeyReleased(evt);
+            }
+        });
+
+        jLabelNumOfPages.setText("/???");
+
+        jLabelCountTime.setText("Timer");
+
+        jTabbedPaneSource.addChangeListener(new javax.swing.event.ChangeListener() {
+            public void stateChanged(javax.swing.event.ChangeEvent evt) {
+                jTabbedPaneSourceStateChanged(evt);
+            }
+        });
+
+        jTextAreaSource.setColumns(20);
+        jTextAreaSource.setLineWrap(true);
+        jTextAreaSource.setRows(5);
+        jScrollPane1.setViewportView(jTextAreaSource);
+
+        javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
+        jPanel3.setLayout(jPanel3Layout);
+        jPanel3Layout.setHorizontalGroup(
+            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 412, Short.MAX_VALUE)
+            .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(jPanel3Layout.createSequentialGroup()
+                    .addContainerGap()
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 392, Short.MAX_VALUE)
+                    .addContainerGap()))
+        );
+        jPanel3Layout.setVerticalGroup(
+            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 352, Short.MAX_VALUE)
+            .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(jPanel3Layout.createSequentialGroup()
+                    .addGap(25, 25, 25)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 301, Short.MAX_VALUE)
+                    .addGap(26, 26, 26)))
+        );
+
+        jTabbedPaneSource.addTab("Bàn phím", jPanel3);
+
+        jButtonFileChooser.setText("Chọn tệp tin");
+        jButtonFileChooser.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonFileChooserActionPerformed(evt);
+            }
+        });
+
+        jLabelFileLocation.setText("file");
+
+        jLabelInfoFile.setText("..................................................................................................");
+
+        javax.swing.GroupLayout jPanel4Layout = new javax.swing.GroupLayout(jPanel4);
+        jPanel4.setLayout(jPanel4Layout);
+        jPanel4Layout.setHorizontalGroup(
+            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel4Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel4Layout.createSequentialGroup()
+                        .addComponent(jButtonFileChooser)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jLabelFileLocation, javax.swing.GroupLayout.PREFERRED_SIZE, 254, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(47, 47, 47))
+                    .addGroup(jPanel4Layout.createSequentialGroup()
+                        .addComponent(jLabelInfoFile)
+                        .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+        );
+        jPanel4Layout.setVerticalGroup(
+            jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel4Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel4Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jButtonFileChooser)
+                    .addComponent(jLabelFileLocation))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jLabelInfoFile)
+                .addContainerGap(298, Short.MAX_VALUE))
+        );
+
+        jTabbedPaneSource.addTab("Tệp tin", jPanel4);
 
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
@@ -156,48 +358,71 @@ public class MainScreen extends javax.swing.JFrame {
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(jLabelInputSource)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jProgressBar1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addComponent(jButtonFileChooser)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jLabelFileLocation, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addComponent(jLabelInputSource2)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 400, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                        .addComponent(jButtonStart, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel2Layout.createSequentialGroup()
-                            .addComponent(jLabelInputSource1)
-                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                            .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, 29, javax.swing.GroupLayout.PREFERRED_SIZE))))
-                .addGap(18, 18, 18)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 372, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-            .addComponent(jProgressBar1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabelInputSource)
+                            .addGroup(jPanel2Layout.createSequentialGroup()
+                                .addComponent(jLabelInputSource2)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jComboBoxNumType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(jButtonStart, javax.swing.GroupLayout.PREFERRED_SIZE, 409, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addGroup(jPanel2Layout.createSequentialGroup()
+                                .addComponent(jLabelInputSource1)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jTextFieldSplitChar, javax.swing.GroupLayout.PREFERRED_SIZE, 29, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(jTabbedPaneSource, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addGroup(jPanel2Layout.createSequentialGroup()
+                                .addGap(0, 0, Short.MAX_VALUE)
+                                .addComponent(jLabelCountTime))
+                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel2Layout.createSequentialGroup()
+                                .addGap(18, 18, 18)
+                                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                    .addComponent(jScrollPane2, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 725, Short.MAX_VALUE)
+                                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel2Layout.createSequentialGroup()
+                                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel2Layout.createSequentialGroup()
+                                                .addComponent(jLabel1)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jLabelcurrenDisplay)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jLabel3)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jLabelTotal))
+                                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel2Layout.createSequentialGroup()
+                                                .addComponent(jButtonPre)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jTextFieldCountPages, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                .addComponent(jLabelNumOfPages)
+                                                .addGap(3, 3, 3)
+                                                .addComponent(jButtonNext)))
+                                        .addGap(0, 0, Short.MAX_VALUE)))))))
+                .addContainerGap())
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
                 .addContainerGap()
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(jLabelInputSource)
+                    .addComponent(jLabel1)
+                    .addComponent(jLabelcurrenDisplay)
+                    .addComponent(jLabel3)
+                    .addComponent(jLabelTotal))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addComponent(jLabelInputSource)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(jButtonFileChooser)
-                            .addComponent(jLabelFileLocation))
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jScrollPane1)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTabbedPaneSource)
+                        .addGap(18, 18, 18)
                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabelInputSource1)
-                            .addComponent(jTextField1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(jTextFieldSplitChar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addGap(2, 2, 2)
                         .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(jComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jComboBoxNumType, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                             .addGroup(jPanel2Layout.createSequentialGroup()
                                 .addComponent(jLabelInputSource2, javax.swing.GroupLayout.PREFERRED_SIZE, 13, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addGap(3, 3, 3)))
@@ -205,22 +430,138 @@ public class MainScreen extends javax.swing.JFrame {
                         .addComponent(jButtonStart, javax.swing.GroupLayout.PREFERRED_SIZE, 44, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addGap(16, 16, 16))
                     .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 16, Short.MAX_VALUE)))
-                .addComponent(jProgressBar1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 452, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jButtonPre)
+                            .addComponent(jButtonNext)
+                            .addComponent(jTextFieldCountPages, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jLabelNumOfPages))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(jLabelCountTime)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)))
+                .addComponent(jProgressBar1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
         );
 
         jTabbedPane3.addTab("Thông thường", jPanel2);
+
+        jLabel2.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        jLabel2.setText("Số lượng phần tử :");
+
+        jTextFieldLengthTest.setText("1000000");
+
+        jLabel4.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        jLabel4.setText("Số lần thực hiện / bộ dữ liệu");
+
+        jTextFieldLoopPerRow.setText("10");
+
+        jLabel5.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        jLabel5.setText("Số lần tạo dữ liệu");
+
+        jTextFieldLoopTest.setText("100");
+
+        jTableResultTest.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+
+            },
+            new String [] {
+                "Thời gian thực thi Stack", "Thời gian thực thi Linked List", "Chênh lệch", "Hoàn thành trước"
+            }
+        ));
+        jScrollPane4.setViewportView(jTableResultTest);
+
+        jButtonReport.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        jButtonReport.setText("Bắt đầu");
+        jButtonReport.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonReportActionPerformed(evt);
+            }
+        });
+
+        jButtonStartTesting.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
+        jButtonStartTesting.setText("Tạo báo cáo");
+        jButtonStartTesting.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButtonStartTestingActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout jPanel5Layout = new javax.swing.GroupLayout(jPanel5);
+        jPanel5.setLayout(jPanel5Layout);
+        jPanel5Layout.setHorizontalGroup(
+            jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel5Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jProgressBarTest, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jScrollPane4)
+                    .addGroup(jPanel5Layout.createSequentialGroup()
+                        .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                            .addComponent(jLabel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jTextFieldLengthTest))
+                        .addGap(18, 18, 18)
+                        .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel4)
+                            .addComponent(jTextFieldLoopPerRow, javax.swing.GroupLayout.PREFERRED_SIZE, 68, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(32, 32, 32)
+                        .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(jPanel5Layout.createSequentialGroup()
+                                .addComponent(jLabel5)
+                                .addGap(0, 0, Short.MAX_VALUE))
+                            .addGroup(jPanel5Layout.createSequentialGroup()
+                                .addComponent(jTextFieldLoopTest, javax.swing.GroupLayout.PREFERRED_SIZE, 68, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 35, Short.MAX_VALUE)
+                                .addComponent(jButtonReport, javax.swing.GroupLayout.PREFERRED_SIZE, 184, javax.swing.GroupLayout.PREFERRED_SIZE)))))
+                .addGap(22, 22, 22))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel5Layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jButtonStartTesting, javax.swing.GroupLayout.PREFERRED_SIZE, 162, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(32, 32, 32))
+        );
+        jPanel5Layout.setVerticalGroup(
+            jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel5Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(jPanel5Layout.createSequentialGroup()
+                        .addComponent(jLabel4)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldLoopPerRow, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanel5Layout.createSequentialGroup()
+                        .addComponent(jLabel2)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(jTextFieldLengthTest, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanel5Layout.createSequentialGroup()
+                        .addComponent(jLabel5)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanel5Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jButtonReport, javax.swing.GroupLayout.PREFERRED_SIZE, 38, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(jTextFieldLoopTest, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 416, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jButtonStartTesting, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jProgressBarTest, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(19, Short.MAX_VALUE))
+        );
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 810, Short.MAX_VALUE)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jPanel5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGap(517, 517, 517))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 474, Short.MAX_VALUE)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(jPanel5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addContainerGap())
         );
 
         jTabbedPane3.addTab("Nâng cao", jPanel1);
@@ -286,11 +627,21 @@ public class MainScreen extends javax.swing.JFrame {
         else
         c.setCurrentDirectory(new File(pathFile));
 
-        // Demonstrate "Open" dialog:
         int rVal = c.showOpenDialog(MainScreen.this);
         if (rVal == JFileChooser.APPROVE_OPTION) {
             pathFile = c.getCurrentDirectory().toString()+ folder +c.getSelectedFile().getName();
             jLabelFileLocation.setText(pathFile);
+            
+            File file = new File(pathFile);
+            
+            jLabelInfoFile.setText(
+                "<html>"+ 
+                "<p style=\"line-height: 150%; margin-top:5;\"> <b>Name: </b>" + file.getName() + "</p>"+ 
+                "<p style=\"line-height: 150%; margin-top:5;\"> <b>Absolute path: </b>" + file.getAbsolutePath() + "</p>"+ 
+                "<p style=\"line-height: 150%; margin-top:5;\"> <b>Size: </b>" + readableFileSize(file.length()) + "</p>"+ 
+                "<p style=\"line-height: 150%; margin-top:5;\"> <b>Last modified: </b>" + new Date(file.lastModified()) + "</html>"
+            );
+		
         }
         if (rVal == JFileChooser.CANCEL_OPTION) {
             //          filename.setText("You pressed cancel");
@@ -300,32 +651,147 @@ public class MainScreen extends javax.swing.JFrame {
     }//GEN-LAST:event_jButtonFileChooserActionPerformed
 
     private void jButtonStartActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonStartActionPerformed
-        ThreadConvert convertBackground = new ThreadConvert(model, pathFile);
+        numberType = Integer.parseInt(jComboBoxNumType.getSelectedItem().toString());
+        splitChar = jTextFieldSplitChar.getText().trim();
+        if(jTextFieldSplitChar.getText().trim().equals("\\n")) splitChar = "\n";
+        if(jTextFieldSplitChar.getText().trim().equals("")) splitChar = " ";
+                
+        String source;
+        if(numTab == 0){
+            source = jTextAreaSource.getText();
+        }else source = pathFile;
+        
+        ThreadConvert convertBackground = new ThreadConvert(source, numTab, numberType, splitChar);
         convertBackground.start();
-        jButtonStart.setText("Đang chạy . . .");
-        jButtonStart.setEnabled(false);
+        if(convertBackground.getStatus()){
+            jButtonStart.setText("Đang chạy . . .");
+            jButtonStart.setEnabled(false);
+            final Timer t = new Timer(50, new ActionListener() {
+                public void actionPerformed(ActionEvent e) {
+                    jProgressBar1.setValue((int) convertBackground.getProcessStatus());
+                    if (jProgressBar1.getValue() == 100) {
+                        ((Timer) e.getSource()).stop();
+                        jLabelCountTime.setText(convertBackground.getRuntime()+" ms");
+                        jButtonStart.setText("Chuyển đổi");
+                        jButtonStart.setEnabled(true);
+                        
+                        rawResultBin = convertBackground.getResult(2);
+                        rawResultHex = convertBackground.getResult(16);
+                        rawResultDec = convertBackground.getResult(10);
+                        rawResultOct = convertBackground.getResult(8);
+                        sourceData = convertBackground.getSourceData();
+                        
+                        if(rawResultBin != null)
+                            numOfPages = rawResultBin.length;
+                        else numOfPages = rawResultHex.length;
+                        jLabelNumOfPages.setText("/"+numOfPages);
+
+                        _renderResult();
+
+                        try {
+                            convertBackground.join();
+                        } catch (InterruptedException ex) {
+                            Logger.getLogger(MainScreen.class.getName()).log(Level.SEVERE, null, ex);
+                        }
+
+                    }
+                }
+            });
+            t.start();
+        }
+        
+    }//GEN-LAST:event_jButtonStartActionPerformed
+
+    private void jComboBoxNumTypeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBoxNumTypeActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jComboBoxNumTypeActionPerformed
+
+    private void jButtonPreActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonPreActionPerformed
+        if(currenPage == 1) jButtonPre.setEnabled(false);
+        else{
+            jButtonPre.setEnabled(true);
+            currenPage --;
+            _renderResult();
+        }
+    }//GEN-LAST:event_jButtonPreActionPerformed
+
+    private void jButtonNextActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonNextActionPerformed
+        if(currenPage == numOfPages) jButtonPre.setEnabled(false);
+        else{
+            jButtonPre.setEnabled(true);
+            currenPage ++;
+            _renderResult();
+        }
+    }//GEN-LAST:event_jButtonNextActionPerformed
+
+    private void jTextFieldCountPagesKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jTextFieldCountPagesKeyReleased
+        if(!jTextFieldCountPages.getText().trim().equals("")){
+            int page = Integer.parseInt(jTextFieldCountPages.getText().trim());
+            if(page > 0 && page <= numOfPages){
+                currenPage = page;
+                _renderResult();
+            }else jTextFieldCountPages.setText(currenPage+"");
+        }
+    }//GEN-LAST:event_jTextFieldCountPagesKeyReleased
+
+    private void jTabbedPaneSourceStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_jTabbedPaneSourceStateChanged
+        numTab = jTabbedPaneSource.getSelectedIndex();
+        reset();
+    }//GEN-LAST:event_jTabbedPaneSourceStateChanged
+
+    private void jButtonReportActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonReportActionPerformed
+        modelTest.setRowCount(0);
+        ThreadTestSpeed testTh = new ThreadTestSpeed(Integer.parseInt(jTextFieldLengthTest.getText()), Integer.parseInt(jTextFieldLoopPerRow.getText()), Integer.parseInt(jTextFieldLoopTest.getText()), modelTest);
+        testTh.start();
+        jProgressBarTest.setVisible(true);
         final Timer t = new Timer(50, new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                jProgressBar1.setValue((int) convertBackground.getProcessStatus());
-                if (jProgressBar1.getValue() == 100) {
+                jProgressBarTest.setValue((int) testTh.getProcess());
+                if (!testTh.running() || jProgressBarTest.getValue() == 100) {
+                    jProgressBarTest.setValue(100);
                     ((Timer) e.getSource()).stop();
-                    jTextArea1.setText(convertBackground.getRuntime()+" ms");
-                    jButtonStart.setText("Chuyển đổi");
-                    jButtonStart.setEnabled(true);
+                    jProgressBarTest.setVisible(false);
+                    reportStack = testTh.resTimesStack;
+                    reportLinkedList = testTh.resTimesLinked;
                     try {
-                        convertBackground.join();
+                        testTh.join();
                     } catch (InterruptedException ex) {
                         Logger.getLogger(MainScreen.class.getName()).log(Level.SEVERE, null, ex);
                     }
+
                 }
             }
         });
         t.start();
-    }//GEN-LAST:event_jButtonStartActionPerformed
+    }//GEN-LAST:event_jButtonReportActionPerformed
 
-    private void jComboBox1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jComboBox1ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_jComboBox1ActionPerformed
+    private void jButtonStartTestingActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButtonStartTestingActionPerformed
+        try {
+            //Bước 1: Tạo đối tượng luồng và liên kết nguồn dữ liệu
+            File f = new File("Report.txt");
+            FileWriter fw = new FileWriter(f);
+            
+            StringBuilder data = new StringBuilder();
+            for (int i = 0; i < reportLinkedList.length; i++) {
+                data.append(reportLinkedList[i] + " ");
+            }
+            data.append("/");
+            
+            for (int i = 0; i < reportStack.length; i++) {
+                data.append(reportStack[i] + " ");
+            }
+
+            fw.write(data.toString());
+
+            fw.close(); 
+          } catch (IOException ex) {
+            System.out.println("Loi ghi file: " + ex);
+        }
+        
+        JOptionPane.showMessageDialog(null, "Đã xuất báo cáo", "Error",
+                                    JOptionPane.INFORMATION_MESSAGE);
+        
+    }//GEN-LAST:event_jButtonStartTestingActionPerformed
 
     /**
      * @param args the command line arguments
@@ -371,21 +837,46 @@ public class MainScreen extends javax.swing.JFrame {
     private javax.swing.JMenu fileMenu;
     private javax.swing.JMenu helpMenu;
     private javax.swing.JButton jButtonFileChooser;
+    private javax.swing.JButton jButtonNext;
+    private javax.swing.JButton jButtonPre;
+    private javax.swing.JButton jButtonReport;
     private javax.swing.JButton jButtonStart;
-    private javax.swing.JComboBox<String> jComboBox1;
+    private javax.swing.JButton jButtonStartTesting;
+    private javax.swing.JComboBox<String> jComboBoxNumType;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
+    private javax.swing.JLabel jLabel5;
+    private javax.swing.JLabel jLabelCountTime;
     private javax.swing.JLabel jLabelFileLocation;
+    private javax.swing.JLabel jLabelInfoFile;
     private javax.swing.JLabel jLabelInputSource;
     private javax.swing.JLabel jLabelInputSource1;
     private javax.swing.JLabel jLabelInputSource2;
+    private javax.swing.JLabel jLabelNumOfPages;
+    private javax.swing.JLabel jLabelTotal;
+    private javax.swing.JLabel jLabelcurrenDisplay;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
+    private javax.swing.JPanel jPanel3;
+    private javax.swing.JPanel jPanel4;
+    private javax.swing.JPanel jPanel5;
     private javax.swing.JProgressBar jProgressBar1;
+    private javax.swing.JProgressBar jProgressBarTest;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JScrollPane jScrollPane4;
     private javax.swing.JTabbedPane jTabbedPane3;
+    private javax.swing.JTabbedPane jTabbedPaneSource;
     private javax.swing.JTable jTableResult;
-    private javax.swing.JTextArea jTextArea1;
-    private javax.swing.JTextField jTextField1;
+    private javax.swing.JTable jTableResultTest;
+    private javax.swing.JTextArea jTextAreaSource;
+    private javax.swing.JTextField jTextFieldCountPages;
+    private javax.swing.JTextField jTextFieldLengthTest;
+    private javax.swing.JTextField jTextFieldLoopPerRow;
+    private javax.swing.JTextField jTextFieldLoopTest;
+    private javax.swing.JTextField jTextFieldSplitChar;
     private javax.swing.JMenuBar menuBar;
     private javax.swing.JMenuItem openMenuItem;
     // End of variables declaration//GEN-END:variables
